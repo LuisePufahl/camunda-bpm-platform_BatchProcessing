@@ -32,9 +32,10 @@ public class PermissionCheckBuilder {
   protected boolean disjunctive = true;
 
   protected PermissionCheckBuilder parent;
+  protected boolean isRevokePermissionCheckEnabled;
 
-  public PermissionCheckBuilder() {
-
+  public PermissionCheckBuilder(boolean isRevokePermissionCheckEnabled) {
+    this.isRevokePermissionCheckEnabled = isRevokePermissionCheckEnabled;
   }
 
   public PermissionCheckBuilder(PermissionCheckBuilder parent) {
@@ -52,7 +53,7 @@ public class PermissionCheckBuilder {
   }
 
   public PermissionCheckBuilder atomicCheck(Resource resource, String queryParam, Permission permission) {
-    PermissionCheck permCheck = new PermissionCheck();
+    PermissionCheck permCheck = new PermissionCheck(isRevokePermissionCheckEnabled);
     permCheck.setResource(resource);
     permCheck.setResourceIdQueryParam(queryParam);
     permCheck.setPermission(permission);

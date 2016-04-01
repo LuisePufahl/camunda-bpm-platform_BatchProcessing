@@ -211,7 +211,7 @@
       </if>
 
       <!-- User REVOKE -->
-      <if test="permCheck.resourceIdQueryParam != null || (permCheck.resourceId != null &amp;&amp; !permCheck.resourceId.equals('*')) ">
+      <if test="permCheck.revokeAuthorizationCheckEnabled &amp;&amp; (permCheck.resourceIdQueryParam != null || (permCheck.resourceId != null &amp;&amp; !permCheck.resourceId.equals('*'))) ">
         WHEN
           <if test="permCheck.resourceIdQueryParam != null">
           ${permCheck.resourceIdQueryParam} IN
@@ -256,6 +256,7 @@
         THEN 1
 
       <!-- User REVOKE -->
+      <if test="permCheck.revokeAuthorizationCheckEnabled">
       WHEN
         EXISTS
           (SELECT
@@ -273,6 +274,7 @@
            AND
                   A.RESOURCE_ID_ = '*')
       THEN 0
+      </if>
 
       ELSE
           (
@@ -307,7 +309,7 @@
                 </if>
 
                 <!-- Group REVOKES -->
-                <if test="permCheck.resourceIdQueryParam != null || (permCheck.resourceId != null &amp;&amp; !permCheck.resourceId.equals('*')) ">
+                <if test="permCheck.revokeAuthorizationCheckEnabled &amp;&amp; (permCheck.resourceIdQueryParam != null || (permCheck.resourceId != null &amp;&amp; !permCheck.resourceId.equals('*'))) ">
                   WHEN
                     <if test="permCheck.resourceIdQueryParam != null">
                     ${permCheck.resourceIdQueryParam} IN
@@ -352,6 +354,7 @@
                   THEN 1
 
                 <!-- Group REVOKES -->
+                <if test="permCheck.revokeAuthorizationCheckEnabled">
                 WHEN
                   EXISTS
                     (SELECT
@@ -369,6 +372,7 @@
                      AND
                             A.RESOURCE_ID_ = '*')
                   THEN 0
+                </if>
 
                 ELSE (
                       SELECT
@@ -401,7 +405,7 @@
                           </if>
 
                           <!-- GLOBAL REVOKES -->
-                          <if test="permCheck.resourceIdQueryParam != null || (permCheck.resourceId != null &amp;&amp; !permCheck.resourceId.equals('*')) ">
+                          <if test="permCheck.revokeAuthorizationCheckEnabled &amp;&amp; (permCheck.resourceIdQueryParam != null || (permCheck.resourceId != null &amp;&amp; !permCheck.resourceId.equals('*'))) ">
                             WHEN
                               <if test="permCheck.resourceIdQueryParam != null">
                               ${permCheck.resourceIdQueryParam} IN
@@ -446,6 +450,7 @@
                             THEN 1
 
                           <!-- GLOBAL REVOKES -->
+                          <if test="permCheck.revokeAuthorizationCheckEnabled">
                           WHEN
                             EXISTS
                               (SELECT
@@ -463,6 +468,7 @@
                                AND
                                       A.RESOURCE_ID_ = '*')
                             THEN 0
+                          </if>
 
                           <!-- No matching authorization found: request is not authorized -->
                           ELSE

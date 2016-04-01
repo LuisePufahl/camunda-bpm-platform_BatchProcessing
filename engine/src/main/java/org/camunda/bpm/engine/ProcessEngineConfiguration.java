@@ -211,6 +211,8 @@ public abstract class ProcessEngineConfiguration {
    */
   protected boolean authorizationEnabledForCustomCode = false;
 
+  protected boolean revokePermissionCheckEnabled = false;
+
   protected ValueTypeResolver valueTypeResolver;
 
   /** use one of the static createXxxx methods instead */
@@ -643,6 +645,14 @@ public abstract class ProcessEngineConfiguration {
 
   public void setJobExecutorAcquireByPriority(boolean jobExecutorAcquireByPriority) {
     this.jobExecutorAcquireByPriority = jobExecutorAcquireByPriority;
+  }
+
+  public boolean isRevokePermissionCheckEnabled() {
+    return revokePermissionCheckEnabled;
+  }
+
+  public void setRevokePermissionCheckEnabled(boolean revokePermissionCheckEnabled) {
+    this.revokePermissionCheckEnabled = revokePermissionCheckEnabled;
   }
 
 }
