@@ -15,8 +15,10 @@ package org.camunda.bpm.engine.impl.cmd;
 import java.io.Serializable;
 import org.camunda.bpm.engine.ProcessEngineException;
 import org.camunda.bpm.engine.impl.context.Context;
+import org.camunda.bpm.engine.impl.history.event.HistoryEventTypes;
 import org.camunda.bpm.engine.impl.interceptor.Command;
 import org.camunda.bpm.engine.impl.interceptor.CommandContext;
+import org.camunda.bpm.engine.impl.persistence.entity.IdentityLinkEntity;
 import org.camunda.bpm.engine.impl.persistence.entity.ProcessDefinitionEntity;
 import org.camunda.bpm.engine.impl.util.EnsureUtil;
 
@@ -60,7 +62,6 @@ public class AddIdentityLinkForProcessDefinitionCmd implements Command<Void>, Se
     EnsureUtil.ensureNotNull("Cannot find process definition with id " + processDefinitionId, "processDefinition", processDefinition);
 
     processDefinition.addIdentityLink(userId, groupId);
-
     return null;
   }
   

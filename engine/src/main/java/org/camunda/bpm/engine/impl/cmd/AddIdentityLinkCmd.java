@@ -17,6 +17,7 @@ import static org.camunda.bpm.engine.impl.util.EnsureUtil.ensureNotNull;
 import java.io.Serializable;
 
 import org.camunda.bpm.engine.ProcessEngineException;
+import org.camunda.bpm.engine.impl.history.event.HistoryEventTypes;
 import org.camunda.bpm.engine.impl.interceptor.Command;
 import org.camunda.bpm.engine.impl.interceptor.CommandContext;
 import org.camunda.bpm.engine.impl.persistence.entity.AuthorizationManager;
@@ -78,7 +79,7 @@ public abstract class AddIdentityLinkCmd implements Command<Void>, Serializable 
 
     AuthorizationManager authorizationManager = commandContext.getAuthorizationManager();
     authorizationManager.checkUpdateTask(task);
-
+    
     if (IdentityLinkType.ASSIGNEE.equals(type)) {
       task.setAssignee(userId);
     } else if (IdentityLinkType.OWNER.equals(type)) {

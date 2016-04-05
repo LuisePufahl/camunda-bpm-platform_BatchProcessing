@@ -33,6 +33,7 @@ import org.camunda.bpm.engine.delegate.Expression;
 import org.camunda.bpm.engine.delegate.TaskListener;
 import org.camunda.bpm.engine.delegate.VariableScope;
 import org.camunda.bpm.engine.exception.NullValueException;
+import org.camunda.bpm.engine.history.UserOperationLogEntry;
 import org.camunda.bpm.engine.impl.ProcessEngineLogger;
 import org.camunda.bpm.engine.impl.cfg.ProcessEngineConfigurationImpl;
 import org.camunda.bpm.engine.impl.cfg.auth.ResourceAuthorizationProvider;
@@ -52,6 +53,7 @@ import org.camunda.bpm.engine.impl.db.DbEntity;
 import org.camunda.bpm.engine.impl.db.EnginePersistenceLogger;
 import org.camunda.bpm.engine.impl.db.HasDbRevision;
 import org.camunda.bpm.engine.impl.db.entitymanager.DbEntityManager;
+import org.camunda.bpm.engine.impl.history.event.HistoryEventTypes;
 import org.camunda.bpm.engine.impl.interceptor.CommandContext;
 import org.camunda.bpm.engine.impl.interceptor.CommandContextListener;
 import org.camunda.bpm.engine.impl.pvm.runtime.PvmExecutionImpl;
@@ -142,6 +144,8 @@ public class TaskEntity extends AbstractVariableScope implements Task, DelegateT
    * contains all changed properties of this entity
    */
   protected transient Map<String, PropertyChange> propertyChanges = new HashMap<String, PropertyChange>();
+  
+  protected transient List<PropertyChange> identityLinkChanges = new ArrayList<PropertyChange>();
 
   // name references of tracked properties
   public static final String ASSIGNEE = "assignee";
@@ -628,15 +632,27 @@ public class TaskEntity extends AbstractVariableScope implements Task, DelegateT
   public IdentityLinkEntity addIdentityLink(String userId, String groupId, String type) {
     ensureTaskActive();
 
-    IdentityLinkEntity identityLinkEntity = IdentityLinkEntity.createAndInsert();
-    getIdentityLinks().add(identityLinkEntity);
+    IdentityLinkEntity identityLink = newIdentityLink(userId, groupId, type);
+    identityLink.insert();
+    getIdentityLinks().add(identityLink);
+    
+    fireAddIdentityLinkAuthorizationProvider(type, userId, groupId);
+    identityLink.fireHistoricIdentityLinkEvent(HistoryEventTypes.IDENTITY_LINK_ADD);
+    
+    return identityLink;
+  }
+  
+  public void fireIdentityLinkHistoryEvents(String userId, String groupId, String type, HistoryEventTypes historyEventType) {
+    IdentityLinkEntity identityLinkEntity = newIdentityLink(userId, groupId, type);
+    identityLinkEntity.fireHistoricIdentityLinkEvent(historyEventType);
+  }
+  
+  public IdentityLinkEntity newIdentityLink(String userId, String groupId, String type) {
+    IdentityLinkEntity identityLinkEntity = new IdentityLinkEntity();
     identityLinkEntity.setTask(this);
     identityLinkEntity.setUserId(userId);
     identityLinkEntity.setGroupId(groupId);
     identityLinkEntity.setType(type);
-
-    fireAddIdentityLinkAuthorizationProvider(type, userId, groupId);
-
     return identityLinkEntity;
   }
 
@@ -650,7 +666,7 @@ public class TaskEntity extends AbstractVariableScope implements Task, DelegateT
 
     for (IdentityLinkEntity identityLink: identityLinks) {
       fireDeleteIdentityLinkAuthorizationProvider(type, userId, groupId);
-
+      identityLink.fireHistoricIdentityLinkEvent(HistoryEventTypes.IDENTITY_LINK_DELETE);
       Context
         .getCommandContext()
         .getDbEntityManager()
@@ -795,6 +811,8 @@ public class TaskEntity extends AbstractVariableScope implements Task, DelegateT
       return;
     }
 
+    identityLinkChanges.add(new PropertyChange(IdentityLinkType.ASSIGNEE, oldAssignee, assignee));
+    
     propertyChanged(ASSIGNEE, oldAssignee, assignee);
     this.assignee = assignee;
 
@@ -805,6 +823,7 @@ public class TaskEntity extends AbstractVariableScope implements Task, DelegateT
       fireEvent(TaskListener.EVENTNAME_ASSIGNMENT);
       if (commandContext.getDbEntityManager().contains(this)) {
         fireAssigneeAuthorizationProvider(oldAssignee, assignee);
+        fireHistoricIdentityLinks();
       }
     }
   }
@@ -824,6 +843,7 @@ public class TaskEntity extends AbstractVariableScope implements Task, DelegateT
       return;
     }
 
+    identityLinkChanges.add(new PropertyChange(IdentityLinkType.OWNER, oldOwner, owner));
     propertyChanged(OWNER, oldOwner, owner);
     this.owner = owner;
 
@@ -832,6 +852,7 @@ public class TaskEntity extends AbstractVariableScope implements Task, DelegateT
     // setOwner outside a service method.  E.g. while creating a new task.
     if (commandContext != null && commandContext.getDbEntityManager().contains(this)) {
       fireOwnerAuthorizationProvider(oldOwner, owner);
+      this.fireHistoricIdentityLinks();
     }
 
   }
@@ -1330,10 +1351,28 @@ public class TaskEntity extends AbstractVariableScope implements Task, DelegateT
     if (commandContext != null) {
       List<PropertyChange> values = new ArrayList<PropertyChange>(propertyChanges.values());
       commandContext.getOperationLogManager().logTaskOperations(operation, this, values);
-    }
+      
+    fireHistoricIdentityLinks();
     propertyChanges.clear();
+    
+    }
   }
 
+  public void fireHistoricIdentityLinks() {
+    for (PropertyChange propertyChange : identityLinkChanges) {
+      String oldValue = propertyChange.getOrgValueString();
+      String propertyName = propertyChange.getPropertyName();
+      if (oldValue != null) {
+        fireIdentityLinkHistoryEvents(oldValue, null, propertyName, HistoryEventTypes.IDENTITY_LINK_DELETE);
+      }
+      String newValue = propertyChange.getNewValueString();
+      if (newValue != null) {
+        fireIdentityLinkHistoryEvents(newValue, null, propertyName, HistoryEventTypes.IDENTITY_LINK_ADD);
+      }
+    }
+    identityLinkChanges.clear();
+  }
+  
   @Override
   public ProcessEngineServices getProcessEngineServices() {
     return Context.getProcessEngineConfiguration()

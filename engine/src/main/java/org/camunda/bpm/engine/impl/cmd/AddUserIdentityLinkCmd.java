@@ -15,6 +15,7 @@ package org.camunda.bpm.engine.impl.cmd;
 import org.camunda.bpm.engine.history.UserOperationLogEntry;
 import org.camunda.bpm.engine.impl.interceptor.CommandContext;
 import org.camunda.bpm.engine.impl.persistence.entity.PropertyChange;
+import org.camunda.bpm.engine.task.IdentityLinkType;
 
 /**
  * @author Daniel Meyer
@@ -33,10 +34,10 @@ public class AddUserIdentityLinkCmd extends AddIdentityLinkCmd {
     super.execute(commandContext);
 
     PropertyChange propertyChange = new PropertyChange(type, null, userId);
-
+    
     commandContext.getOperationLogManager()
       .logLinkOperation(UserOperationLogEntry.OPERATION_TYPE_ADD_USER_LINK, task, propertyChange);
-
+    
     return null;
   }
 
