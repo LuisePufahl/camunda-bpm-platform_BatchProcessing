@@ -190,4 +190,9 @@ public class TimerDeclarationImpl extends JobDeclaration<ExecutionEntity, TimerE
     }
   }
 
+public void setJobHandlerConfiguration(String id) {
+	// TODO Auto-generated method stub
+	
+}
+
 }
