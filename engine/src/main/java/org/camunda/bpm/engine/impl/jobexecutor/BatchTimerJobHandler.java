@@ -15,25 +15,29 @@ public class BatchTimerJobHandler extends TimerEventJobHandler {
 		return TYPE;
 	}
 
-	
+
 
 	@Override
-	public void execute(JobHandlerConfiguration configuration, ExecutionEntity execution, CommandContext commandContext) {
+	public void execute(TimerJobConfiguration configuration, ExecutionEntity execution, CommandContext commandContext,
+			String tenantId) {
 		// TODO Auto-generated method stub
-		// get related batch cluster
-		BatchRegion batchRegion = ((UserTaskBatchBehavior)execution.getActivity().getActivityBehavior()).getBatchRegion();
-		//set batch cluster in running
-		BatchCluster bCluster = batchRegion.getClusterforPI(execution.getProcessInstanceId());
+				// get related batch cluster
+				BatchRegion batchRegion = ((UserTaskBatchBehavior)execution.getActivity().getActivityBehavior()).getBatchRegion();
+				//set batch cluster in running
+				BatchCluster bCluster = batchRegion.getClusterforPI(execution.getProcessInstanceId());
+				
+				if (bCluster.getCurrentState() == bCluster.INIT ){
+					bCluster.activate();
+				}
 		
-		if (bCluster.getCurrentState() == bCluster.INIT ){
-			bCluster.activate();
-		}
 	}
 
-	@Override
-	public JobHandlerConfiguration newConfiguration(String canonicalString) {
+
+
+	//@Override
+	//public TimerJobConfiguration newConfiguration(String canonicalString) {
 		// TODO Auto-generated method stub
-		return null;
-	}
+		//return null;
+	//}
 
 }

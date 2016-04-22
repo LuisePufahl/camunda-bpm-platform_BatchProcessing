@@ -2547,7 +2547,7 @@ public class BpmnParse extends Parse {
 	  Expression expression = expressionManager.createExpression(batchRegion.getTimeout());
 
 	  TimerDeclarationImpl timerDeclaration = new TimerDeclarationImpl(expression, type, BatchTimerJobHandler.TYPE);
-	      timerDeclaration.setJobHandlerConfiguration(activity.getId());
+	      timerDeclaration.setRawJobHandlerConfiguration(activity.getId());
 	      timerDeclaration.setExclusive(true);
 	      timerDeclaration.setActivity(activity);
 	      timerDeclaration.setJobConfiguration(type.toString() + ": " + expression.getExpressionText());
