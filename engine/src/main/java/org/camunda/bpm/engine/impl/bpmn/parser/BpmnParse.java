@@ -148,8 +148,11 @@ import org.camunda.bpm.engine.impl.util.xml.Parse;
 import org.camunda.bpm.engine.impl.variable.VariableDeclaration;
 import org.camunda.bpm.engine.repository.ProcessDefinition;
 import org.unipotsdam.hpi.batch.BatchRegion;
+<<<<<<< HEAD
 
 import static org.camunda.bpm.engine.impl.util.ClassDelegateUtil.instantiateDelegate;
+=======
+>>>>>>> 7.4.0_batchfeatures
 
 /**
  * Specific parsing of one BPMN 2.0 XML file, created by the {@link BpmnParser}.
@@ -250,6 +253,11 @@ public class BpmnParse extends Parse {
 
   /** A map for storing the process references of participants */
   protected Map<String, String> participantProcesses = new HashMap<String, String>();
+ 
+  //TODO: important variables for batch region
+  /** A map for storing the batch regions and the elements of each batch region */
+  protected Map<String, BatchRegion> batchRegions = new HashMap<String, BatchRegion>();
+  protected Map<String, String> elementsOfBatchRegions = new HashMap<String, String>();
 
   /** A map for storing the batch regions and the elements of each batch region */
   protected Map<String, BatchRegion> batchRegions = new HashMap<String, BatchRegion>();
@@ -1242,7 +1250,11 @@ public class BpmnParse extends Parse {
 	            				for (Element processVariable:processVariables){
 	            					groupingCharacteristic.add(processVariable.getText());          					
 	            				}
+<<<<<<< HEAD
 // TODO            				groupingCharacteristic.add(configItem.getText());
+=======
+	//TODO            				groupingCharacteristic.add(configItem.getText());
+>>>>>>> 7.4.0_batchfeatures
 	            				
 	            			}else if(configItem.getTagName().equals("maxCapacity")){
 	            				maxCapacity = Integer.parseInt(configItem.getText());
@@ -2508,6 +2520,7 @@ public class BpmnParse extends Parse {
    * Parses a userTask declaration.
    */
   public ActivityImpl parseUserTask(Element userTaskElement, ScopeImpl scope) {
+<<<<<<< HEAD
     ActivityImpl activity = createActivityOnScope(userTaskElement, scope);
 
     parseAsynchronousContinuationForActivity(userTaskElement, activity);
@@ -2564,6 +2577,66 @@ public class BpmnParse extends Parse {
 	 // }
 	
   }
+=======
+	    ActivityImpl activity = createActivityOnScope(userTaskElement, scope);
+
+	    parseAsynchronousContinuationForActivity(userTaskElement, activity);
+
+	    TaskDefinition taskDefinition = parseTaskDefinition(userTaskElement, activity.getId(), (ProcessDefinitionEntity) scope.getProcessDefinition());
+	    TaskDecorator taskDecorator = new TaskDecorator(taskDefinition, expressionManager);
+
+	    
+	    
+	    //TODO extension for batch
+	    if (elementsOfBatchRegions.containsKey(userTaskElement.attribute("id"))){
+	    	
+	    	BatchRegion batchRegion = batchRegions.get(elementsOfBatchRegions.get(userTaskElement.attribute("id")));
+	    	
+	    	UserTaskBatchBehavior userBatchActivity = new UserTaskBatchBehavior(taskDecorator,batchRegion);
+	    	activity.setActivityBehavior(userBatchActivity);
+	    	
+	    	if (batchRegion.getEntryActivity().equals(activity.getId())){
+	    		parseBatchTimer(activity, batchRegion);
+	    	}
+	    	
+	    	
+	    } else {
+	    	UserTaskActivityBehavior userTaskActivity = new UserTaskActivityBehavior(taskDecorator);
+	    	activity.setActivityBehavior(userTaskActivity);
+	    }
+	    
+	    parseProperties(userTaskElement, activity);
+	    parseExecutionListenersOnScope(userTaskElement, activity);
+
+	    for (BpmnParseListener parseListener : parseListeners) {
+	      parseListener.parseUserTask(userTaskElement, scope, activity);
+	    }
+	    return activity;
+	  }
+
+	  private void parseBatchTimer(ActivityImpl activity, BatchRegion batchRegion) {
+		  TimerDeclarationType type = TimerDeclarationType.DURATION;
+		  Expression expression = expressionManager.createExpression(batchRegion.getTimeout());
+
+		  TimerDeclarationImpl timerDeclaration = new TimerDeclarationImpl(expression, type, BatchTimerJobHandler.TYPE);
+		      timerDeclaration.setJobHandlerConfiguration(activity.getId());
+		      timerDeclaration.setExclusive(true);
+		      timerDeclaration.setActivity(activity);
+		      timerDeclaration.setJobConfiguration(type.toString() + ": " + expression.getExpressionText());
+		      addJobDeclarationToProcessDefinition(timerDeclaration, activity.getProcessDefinition());
+
+		      timerDeclaration.setJobPriorityProvider((ParameterValueProvider) activity.getProperty(PROPERTYNAME_JOB_PRIORITY));
+		      
+		  addJobDeclarationToProcessDefinition(timerDeclaration, activity.getProcessDefinition());
+		      
+		  addTimerDeclaration(activity.getFlowScope(), timerDeclaration);
+
+		 // for (BpmnParseListener parseListener : parseListeners) {
+		 //     parseListener.parseIntermediateTimerEventDefinition(timerEventDefinition, timerActivity);
+		 // }
+		
+	  }
+>>>>>>> 7.4.0_batchfeatures
 
   public TaskDefinition parseTaskDefinition(Element taskElement, String taskDefinitionKey, ProcessDefinitionEntity processDefinition) {
     TaskFormHandler taskFormHandler;

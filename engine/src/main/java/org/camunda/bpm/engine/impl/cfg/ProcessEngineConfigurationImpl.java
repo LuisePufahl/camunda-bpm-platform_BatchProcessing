@@ -1338,6 +1338,9 @@ public abstract class ProcessEngineConfigurationImpl extends ProcessEngineConfig
     ProcessEventJobHandler processEventJobHandler = new ProcessEventJobHandler();
     jobHandlers.put(processEventJobHandler.getType(), processEventJobHandler);
 
+    BatchTimerJobHandler batchTimerJobHandler = new BatchTimerJobHandler();
+    jobHandlers.put(batchTimerJobHandler.getType(), batchTimerJobHandler);
+    
     TimerSuspendProcessDefinitionHandler suspendProcessDefinitionHandler = new TimerSuspendProcessDefinitionHandler();
     jobHandlers.put(suspendProcessDefinitionHandler.getType(), suspendProcessDefinitionHandler);
 

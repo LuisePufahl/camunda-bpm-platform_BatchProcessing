@@ -7,6 +7,10 @@ import java.util.List;
 import org.camunda.bpm.engine.impl.bpmn.behavior.BatchBehavior;
 import org.camunda.bpm.engine.impl.bpmn.behavior.UserTaskBatchBehavior;
 import org.camunda.bpm.engine.impl.context.Context;
+<<<<<<< HEAD
+=======
+import org.camunda.bpm.engine.impl.persistence.entity.ExecutionEntity;
+>>>>>>> 7.4.0_batchfeatures
 import org.camunda.bpm.engine.impl.persistence.entity.TaskEntity;
 import org.camunda.bpm.engine.impl.pvm.delegate.ActivityExecution;
 
