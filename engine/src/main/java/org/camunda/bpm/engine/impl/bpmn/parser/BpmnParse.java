@@ -74,6 +74,7 @@ import org.camunda.bpm.engine.impl.bpmn.behavior.TerminateEndEventActivityBehavi
 import org.camunda.bpm.engine.impl.bpmn.behavior.ThrowEscalationEventActivityBehavior;
 import org.camunda.bpm.engine.impl.bpmn.behavior.TransactionActivityBehavior;
 import org.camunda.bpm.engine.impl.bpmn.behavior.UserTaskActivityBehavior;
+import org.camunda.bpm.engine.impl.bpmn.behavior.UserTaskBatchBehavior;
 import org.camunda.bpm.engine.impl.bpmn.helper.BpmnProperties;
 import org.camunda.bpm.engine.impl.bpmn.listener.ClassDelegateExecutionListener;
 import org.camunda.bpm.engine.impl.bpmn.listener.DelegateExpressionExecutionListener;
@@ -102,6 +103,7 @@ import org.camunda.bpm.engine.impl.form.handler.StartFormHandler;
 import org.camunda.bpm.engine.impl.form.handler.TaskFormHandler;
 import org.camunda.bpm.engine.impl.jobexecutor.AsyncAfterMessageJobDeclaration;
 import org.camunda.bpm.engine.impl.jobexecutor.AsyncBeforeMessageJobDeclaration;
+import org.camunda.bpm.engine.impl.jobexecutor.BatchTimerJobHandler;
 import org.camunda.bpm.engine.impl.jobexecutor.EventSubscriptionJobDeclaration;
 import org.camunda.bpm.engine.impl.jobexecutor.JobDeclaration;
 import org.camunda.bpm.engine.impl.jobexecutor.MessageJobDeclaration;
@@ -144,6 +146,7 @@ import org.camunda.bpm.engine.impl.util.xml.Namespace;
 import org.camunda.bpm.engine.impl.util.xml.Parse;
 import org.camunda.bpm.engine.impl.variable.VariableDeclaration;
 import org.camunda.bpm.engine.repository.ProcessDefinition;
+import org.unipotsdam.hpi.batch.BatchRegion;
 
 /**
  * Specific parsing of one BPMN 2.0 XML file, created by the {@link BpmnParser}.
@@ -254,6 +257,13 @@ public class BpmnParse extends Parse {
    */
   protected Map<String, MessageDefinition> messages = new HashMap<String, MessageDefinition>();
   protected Map<String, SignalDefinition> signals = new HashMap<String, SignalDefinition>();
+  
+  
+  //TODO: important variables for batch region
+  /** A map for storing the batch regions and the elements of each batch region */
+  protected Map<String, BatchRegion> batchRegions = new HashMap<String, BatchRegion>();
+  protected Map<String, String> elementsOfBatchRegions = new HashMap<String, String>();
+  
 
   // Members
   protected ExpressionManager expressionManager;
@@ -1190,7 +1200,77 @@ public class BpmnParse extends Parse {
    */
   public void parseActivities(List<Element> activityElements, Element parentElement, ScopeImpl scopeElement) {
     for (Element activityElement : activityElements) {
-      parseActivity(activityElement, parentElement, scopeElement);
+    	//TODO: Extension for batch region
+    	if (activityElement.getTagName().equals("extensionElements")){
+    		
+    		List<Element> extensionElements = activityElement.elements();
+    		
+    		
+    		for (Element extensionElement:extensionElements){
+    			if(extensionElement.getTagName().equals("batchRegion")){
+    				List<Element> batchRegionConfig = activityElement.elements().get(0).elements();
+            		int maxCapacity = 0;
+            		int threshold = 0;
+            		String timeOut = new String();
+            		List <String> groupingCharacteristic = new ArrayList <String>();
+            		String entryActivity = null;
+            		String exitActivity = null;
+            		
+            		for (Element configItem : batchRegionConfig) {
+            			if (configItem.getTagName().equals("elements")){
+            				for (Element element:configItem.elements()){
+            					elementsOfBatchRegions.put(element.getText(), extensionElement.attribute("id"));
+            					if (element.attribute("isEntryActivity")!=null){
+            						if (element.attribute("isEntryActivity").equals("true")){
+                						entryActivity = element.getText();
+                					}
+            					}
+            					if (element.attribute("isExitActivity")!=null){
+            						if (element.attribute("isExitActivity").equals("true")){
+                						exitActivity = element.getText();
+                					}
+            					}
+            					
+            					
+            				}
+            			}else if(configItem.getTagName().equals("groupingCharacteristic")){
+            				List<Element> processVariables = configItem.elements();
+            				for (Element processVariable:processVariables){
+            					groupingCharacteristic.add(processVariable.getText());          					
+            				}
+            				
+            			}else if(configItem.getTagName().equals("maxCapacity")){
+            				maxCapacity = Integer.parseInt(configItem.getText());
+            				
+            			}else if(configItem.getTagName().equals("thresholdRule")){
+            				threshold = Integer.parseInt(configItem.attribute("num"));
+            				timeOut= configItem.attribute("timeout");
+            			}
+            		}
+            		
+            		if (entryActivity == null) {
+          	          addError("The batch region "+ extensionElement.attribute("id") + " needs a defined entry activity",
+          	              null);
+          	        }
+            		
+            		if (exitActivity == null) {
+            	          addError("The batch region "+ extensionElement.attribute("id") + " needs a defined exit activity",
+            	              null);
+            	        }
+            		
+            		     		
+            		
+            		BatchRegion batchRegion = new BatchRegion(groupingCharacteristic, maxCapacity, threshold, timeOut, entryActivity, exitActivity);
+            		
+            		batchRegions.put(extensionElement.attribute("id"), batchRegion);
+    			}	
+        		
+    		}
+    		   		
+    		
+    	} else {
+    		parseActivity(activityElement, parentElement, scopeElement);
+    	}
     }
   }
 
@@ -2428,8 +2508,23 @@ public class BpmnParse extends Parse {
     TaskDefinition taskDefinition = parseTaskDefinition(userTaskElement, activity.getId(), (ProcessDefinitionEntity) scope.getProcessDefinition());
     TaskDecorator taskDecorator = new TaskDecorator(taskDefinition, expressionManager);
 
-    UserTaskActivityBehavior userTaskActivity = new UserTaskActivityBehavior(taskDecorator);
-    activity.setActivityBehavior(userTaskActivity);
+    //TODO extension for batch
+    if (elementsOfBatchRegions.containsKey(userTaskElement.attribute("id"))){
+    	
+    	BatchRegion batchRegion = batchRegions.get(elementsOfBatchRegions.get(userTaskElement.attribute("id")));
+    	
+    	UserTaskBatchBehavior userBatchActivity = new UserTaskBatchBehavior(taskDecorator,batchRegion);
+    	activity.setActivityBehavior(userBatchActivity);
+    	
+    	if (batchRegion.getEntryActivity().equals(activity.getId())){
+    		parseBatchTimer(activity, batchRegion);
+    	}
+    	
+    	
+    } else {
+    	UserTaskActivityBehavior userTaskActivity = new UserTaskActivityBehavior(taskDecorator);
+    	activity.setActivityBehavior(userTaskActivity);
+    }
 
     parseProperties(userTaskElement, activity);
     parseExecutionListenersOnScope(userTaskElement, activity);
@@ -2438,6 +2533,24 @@ public class BpmnParse extends Parse {
       parseListener.parseUserTask(userTaskElement, scope, activity);
     }
     return activity;
+  }
+  
+  private void parseBatchTimer(ActivityImpl activity, BatchRegion batchRegion) {
+	  TimerDeclarationType type = TimerDeclarationType.DURATION;
+	  Expression expression = expressionManager.createExpression(batchRegion.getTimeout());
+
+	  TimerDeclarationImpl timerDeclaration = new TimerDeclarationImpl(expression, type, BatchTimerJobHandler.TYPE);
+	      timerDeclaration.setExclusive(true);
+	      timerDeclaration.setActivity(activity);
+	      timerDeclaration.setJobConfiguration(type.toString() + ": " + expression.getExpressionText());
+	      addJobDeclarationToProcessDefinition(timerDeclaration, activity.getProcessDefinition());
+
+	      timerDeclaration.setJobPriorityProvider((ParameterValueProvider) activity.getProperty(PROPERTYNAME_JOB_PRIORITY));
+	      
+	  addJobDeclarationToProcessDefinition(timerDeclaration, activity.getProcessDefinition());
+	      
+	  addTimerDeclaration(activity.getFlowScope(), timerDeclaration);
+	
   }
 
   public TaskDefinition parseTaskDefinition(Element taskElement, String taskDefinitionKey, ProcessDefinitionEntity processDefinition) {

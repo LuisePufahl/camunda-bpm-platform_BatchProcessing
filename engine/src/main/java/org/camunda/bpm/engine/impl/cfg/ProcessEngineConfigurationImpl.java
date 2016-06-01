@@ -157,6 +157,7 @@ import org.camunda.bpm.engine.impl.interceptor.CommandInterceptor;
 import org.camunda.bpm.engine.impl.interceptor.DelegateInterceptor;
 import org.camunda.bpm.engine.impl.interceptor.SessionFactory;
 import org.camunda.bpm.engine.impl.jobexecutor.AsyncContinuationJobHandler;
+import org.camunda.bpm.engine.impl.jobexecutor.BatchTimerJobHandler;
 import org.camunda.bpm.engine.impl.jobexecutor.DefaultFailedJobCommandFactory;
 import org.camunda.bpm.engine.impl.jobexecutor.DefaultJobExecutor;
 import org.camunda.bpm.engine.impl.jobexecutor.DefaultJobPriorityProvider;
@@ -1148,6 +1149,9 @@ public abstract class ProcessEngineConfigurationImpl extends ProcessEngineConfig
     if (jobExecutor==null) {
       jobExecutor = new DefaultJobExecutor();
     }
+    
+    BatchTimerJobHandler batchTimerJobHandler = new BatchTimerJobHandler();
+    jobHandlers.put(batchTimerJobHandler.getType(), batchTimerJobHandler);
 
     jobHandlers = new HashMap<String, JobHandler>();
     TimerExecuteNestedActivityJobHandler timerExecuteNestedActivityJobHandler = new TimerExecuteNestedActivityJobHandler();
