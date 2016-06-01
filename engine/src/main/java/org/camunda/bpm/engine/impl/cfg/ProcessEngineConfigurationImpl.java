@@ -1358,9 +1358,6 @@ public abstract class ProcessEngineConfigurationImpl extends ProcessEngineConfig
 
     BatchMonitorJobHandler batchMonitorJobHandler = new BatchMonitorJobHandler();
     jobHandlers.put(batchMonitorJobHandler.getType(), batchMonitorJobHandler);
-
-    BatchTimerJobHandler batchTimerJobHandler = new BatchTimerJobHandler();
-    jobHandlers.put(batchTimerJobHandler.getType(), batchTimerJobHandler);
     
     for (JobHandler batchHandler : batchHandlers.values()) {
       jobHandlers.put(batchHandler.getType(), batchHandler);
