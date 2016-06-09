@@ -1150,10 +1150,13 @@ public abstract class ProcessEngineConfigurationImpl extends ProcessEngineConfig
       jobExecutor = new DefaultJobExecutor();
     }
     
-    BatchTimerJobHandler batchTimerJobHandler = new BatchTimerJobHandler();
-    jobHandlers.put(batchTimerJobHandler.getType(), batchTimerJobHandler);
+
 
     jobHandlers = new HashMap<String, JobHandler>();
+    
+    BatchTimerJobHandler batchTimerJobHandler = new BatchTimerJobHandler();
+    jobHandlers.put(batchTimerJobHandler.getType(), batchTimerJobHandler);
+    
     TimerExecuteNestedActivityJobHandler timerExecuteNestedActivityJobHandler = new TimerExecuteNestedActivityJobHandler();
     jobHandlers.put(timerExecuteNestedActivityJobHandler.getType(), timerExecuteNestedActivityJobHandler);
 

@@ -1,0 +1,87 @@
+<h3>Embedded Forms Quickstart</h3>
+<form role="form"
+      name="variablesForm">
+      
+
+<script cam-script type="text/form-script">
+
+	var caseList = $scope.caseList = {};
+
+    camForm.on('form-loaded', function() {
+
+    // declare a 'json' variable 'caseList' 
+    	camForm.variableManager.createVariable({
+        	name: 'caseList',
+        	type: 'json',
+        	value: caseList
+      	});
+    });
+
+</script>
+
+<script cam-script type="text/form-script">
+
+	var caseListString = $scope.caseListString = {};
+
+    camForm.on('form-loaded', function() {
+
+    // declare a 'json' variable 'caseListString' 
+    	camForm.variableManager.createVariable({
+        	name: 'caseListString',
+        	type: 'String',
+        	value: 'caseListString'
+      	});
+    });
+
+</script>
+
+
+    <h2>Order Details</h2>
+
+
+    <!-- custName -->
+    <div class="form-group">
+      <label for="inputcustName">Customer Name</label>
+      <div class="controls">
+        <input class="form-control"
+               required
+               type="text"
+               cam-variable-name="custName"
+               cam-variable-type="String"
+               placeholder="John"
+               ng-minlength="2"
+               ng-maxlength="20" />
+      </div>
+    </div>
+
+    <!-- custAdress -->
+    <div class="form-group">
+      <label for="inputcustAdress">Customer Adress</label>
+      <div class="controls">
+        <input class="form-control"
+               required
+               type="text"
+               cam-variable-name="custAdress"
+               cam-variable-type="String"
+               placeholder="Baker Street 12"
+               ng-minlength="2"
+               ng-maxlength="20" />
+               
+      </div>
+    </div>
+
+    <!-- orderItem -->
+    <div class="form-group">
+      <label for="inputorderItems">Order Item</label>
+      <div class="controls">
+        <input class="form-control"
+               required
+               type="text"
+               cam-variable-name="orderItems"
+               cam-variable-type="String"
+               placeholder="Book 187"
+               ng-minlength="2"
+               ng-maxlength="20" />
+      </div>
+    </div>
+</form>

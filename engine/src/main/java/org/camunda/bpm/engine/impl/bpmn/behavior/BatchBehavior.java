@@ -14,6 +14,6 @@ public interface BatchBehavior {
 	
 	//void terminate();
 
-	void composite(List<ActivityExecution> executions);
+	void composite(ActivityExecution batchExecution, List<ActivityExecution> executions);
 
 }

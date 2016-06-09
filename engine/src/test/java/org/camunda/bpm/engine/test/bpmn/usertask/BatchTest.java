@@ -42,11 +42,11 @@ public class BatchTest extends PluggableProcessEngineTestCase {
     Map<String, Object> formProperties = new HashMap<String, Object>();
     formProperties.put("firstname", "Kermit");
     formProperties.put("lastname", "TheFrog");
-    
+    formProperties.put("order", "Dress");
     
     taskService.complete(tasks.get(0).getId(),formProperties);
     
-  //  formProperties.put("lastname", "bla");
+    formProperties.put("order", "Suitcase");
     taskService.complete(tasks.get(1).getId(),formProperties);
         
     
@@ -56,12 +56,13 @@ public class BatchTest extends PluggableProcessEngineTestCase {
   	//Object test= formService.getRenderedTaskForm(task.getId());
   	//taskService.complete(task.getId());
   	
-    //runtimeService.startProcessInstanceByKey("myProc");
+    runtimeService.startProcessInstanceByKey("myProc");
     
     // make sure user task exists
-    //tasks = taskService.createTaskQuery().list();
+    tasks = taskService.createTaskQuery().list();
   	
-    //taskService.complete(tasks.get(1).getId(),formProperties);
+    formProperties.put("order", "Book");
+    taskService.complete(tasks.get(1).getId(),formProperties);
     
     // first batch task
     Task batchTask = taskService.createTaskQuery().singleResult();
@@ -75,18 +76,18 @@ public class BatchTest extends PluggableProcessEngineTestCase {
   	taskService.complete(batchTask.getId());
   	
   	//test Timer
-  	//ProcessInstance pi = runtimeService.startProcessInstanceByKey("myProc");
-  	//task = taskService.createTaskQuery().singleResult();
-  	//taskService.complete(task.getId(),formProperties);
+  	ProcessInstance pi = runtimeService.startProcessInstanceByKey("myProc");
+  	task = taskService.createTaskQuery().singleResult();
+  	taskService.complete(task.getId(),formProperties);
   	
   	// Set the clock fixed
-    //Date startTime = new Date();
-    //JobQuery jobQuery = managementService.createJobQuery().processInstanceId(pi.getId());
-    //assertEquals(1, jobQuery.count());
+    Date startTime = new Date();
+    JobQuery jobQuery = managementService.createJobQuery().processInstanceId(pi.getId());
+    assertEquals(1, jobQuery.count());
 
     // After setting the clock to time '50minutes and 5 seconds', the second timer should fire
-    //ClockUtil.setCurrentTime(new Date(startTime.getTime() + ((1 * 60 * 1000) + 5000)));
-    //waitForJobExecutorToProcessAllJobs(5000L);
+    ClockUtil.setCurrentTime(new Date(startTime.getTime() + ((1 * 60 * 1000) + 5000)));
+    waitForJobExecutorToProcessAllJobs(5000L);
     
   	
   }

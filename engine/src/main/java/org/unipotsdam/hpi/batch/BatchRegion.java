@@ -124,7 +124,7 @@ public class BatchRegion {
 						}
 					}
 					// Assigning to a fresh BatchCluster if none of the existing BatchClusters was in state INIT or READY
-					BatchCluster newCluster = new BatchCluster(this);
+					BatchCluster newCluster = new BatchCluster(execution, this);
 					newCluster.addInstance(execution);
 					assignedPIsToClusters.put(execution.getProcessInstanceId(), newCluster);
 					dataViewclusters.add(newCluster);
@@ -134,7 +134,7 @@ public class BatchRegion {
 									
 					
 				}else{	// If there are no BatchClusters for the given DataView, the ProcessInstance is assigned to a freshly created BatchCluster			
-					BatchCluster newCluster = new BatchCluster(this);
+					BatchCluster newCluster = new BatchCluster(execution, this);
 					newCluster.addInstance(execution);
 					assignedPIsToClusters.put(execution.getProcessInstanceId(), newCluster);
 					List<BatchCluster> dataViewclusters = new ArrayList<BatchCluster>();

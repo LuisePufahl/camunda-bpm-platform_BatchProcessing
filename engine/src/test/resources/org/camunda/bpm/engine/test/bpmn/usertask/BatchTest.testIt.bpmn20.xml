@@ -17,22 +17,7 @@
              
    <process id="myProc" name="P3.bpmn20.xml">
    	 
-   	 <extensionElements>
-        <bpt:batchRegion id = "batch1">
-            <!--Assumption: batch region is a sequence of activities-->
-            <bpt:elements>
-            	<bpt:element id ="1" isEntryActivity = "true">userTask2</bpt:element>
-            	<bpt:element id ="2" isExitActivity = "true">userTask3</bpt:element>
-            </bpt:elements>
-   	 		<bpt:groupingCharacteristic>
-   	 			<bpt:processVariable id ="1">lastname</bpt:processVariable>
-   	 			<bpt:processVariable id ="2">firstname</bpt:processVariable>   	 		
-   	 		</bpt:groupingCharacteristic>
-    		<bpt:maxCapacity>3</bpt:maxCapacity>
-    		<bpt:thresholdRule num = "2" timeout="PT10S"></bpt:thresholdRule>
-   		</bpt:batchRegion>
-      </extensionElements>
-   	 
+	 
    	 
    	 
    
@@ -66,8 +51,23 @@
          </humanPerformer>
       </userTask>
       
-      <sequenceFlow id="sid-7CD58A88-0C17-4B28-BF0A-1A0695C77012" name="" sourceRef="userTask1" targetRef="userTask2"/>
+      <sequenceFlow id="sid-7CD58A88-0C17-4B28-BF0A-1A0695C77012" name="" sourceRef="userTask1" targetRef="sub1"/>
       
+      <subProcess id="sub1" name="batchRegion">
+		    <extensionElements>
+				        <bpt:batchRegion id = "batch1">
+				            <!--Assumption: batch region is a sequence of activities-->
+				   	 		<bpt:groupingCharacteristic>
+				   	 			<bpt:processVariable id ="1">lastname</bpt:processVariable>
+				   	 			<bpt:processVariable id ="2">firstname</bpt:processVariable>   	 		
+				   	 		</bpt:groupingCharacteristic>
+				    		<bpt:maxCapacity>3</bpt:maxCapacity>
+				    		<bpt:thresholdRule num = "2" timeout="PT10S"></bpt:thresholdRule>
+				   		</bpt:batchRegion>
+      		</extensionElements>
+	
+	<startEvent id="theSubStart" name="" />
+      <sequenceFlow id="sid-A143A22A-DBFC-4F85-A3E4-0F502E0CA456" name="" sourceRef="theSubStart" targetRef="userTask2"/>	
       
       <userTask id="userTask2" camunda:formKey="embedded:app:forms/taskform.html" name= "Namen validieren" >
       	<extensionElements>
@@ -130,7 +130,9 @@
          </humanPerformer>
       </userTask>
       
-      <sequenceFlow id="sid-7CD58A88-0C17-4B28-BF0A-1A0695C77011" name="" sourceRef="userTask3" targetRef="theEnd1"/>
+      </subProcess>
+      
+      <sequenceFlow id="sid-7CD58A88-0C17-4B28-BF0A-1A0695C77011" name="" sourceRef="sub1" targetRef="theEnd1"/>
       
       <endEvent id="theEnd1" name="" />
 

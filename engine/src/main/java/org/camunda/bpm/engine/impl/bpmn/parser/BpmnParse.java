@@ -1217,23 +1217,7 @@ public class BpmnParse extends Parse {
             		String exitActivity = null;
             		
             		for (Element configItem : batchRegionConfig) {
-            			if (configItem.getTagName().equals("elements")){
-            				for (Element element:configItem.elements()){
-            					elementsOfBatchRegions.put(element.getText(), extensionElement.attribute("id"));
-            					if (element.attribute("isEntryActivity")!=null){
-            						if (element.attribute("isEntryActivity").equals("true")){
-                						entryActivity = element.getText();
-                					}
-            					}
-            					if (element.attribute("isExitActivity")!=null){
-            						if (element.attribute("isExitActivity").equals("true")){
-                						exitActivity = element.getText();
-                					}
-            					}
-            					
-            					
-            				}
-            			}else if(configItem.getTagName().equals("groupingCharacteristic")){
+            			if(configItem.getTagName().equals("groupingCharacteristic")){
             				List<Element> processVariables = configItem.elements();
             				for (Element processVariable:processVariables){
             					groupingCharacteristic.add(processVariable.getText());          					
@@ -1248,17 +1232,83 @@ public class BpmnParse extends Parse {
             			}
             		}
             		
-            		if (entryActivity == null) {
-          	          addError("The batch region "+ extensionElement.attribute("id") + " needs a defined entry activity",
-          	              null);
-          	        }
             		
-            		if (exitActivity == null) {
-            	          addError("The batch region "+ extensionElement.attribute("id") + " needs a defined exit activity",
-            	              null);
-            	        }
+            		//identify the elements of the batch region
             		
-            		     		
+            		for (Element batchRegionElement:parentElement.elements()){
+            			elementsOfBatchRegions.put(batchRegionElement.attribute("id"), extensionElement.attribute("id"));
+            		}
+            		
+            		
+            		
+            		//identification of entry and exit activity
+            		Map<String,ArrayList<String>> preConditionPerElement = new HashMap<String,ArrayList<String>>();
+            		Map<String,ArrayList<String>> postConditionPerElement = new HashMap<String,ArrayList<String>>();
+            		
+            		for (Element batchRegionElement:parentElement.elements()){
+
+            			if (batchRegionElement.getTagName().equals("sequenceFlow")){
+                			String source = batchRegionElement.attribute("sourceRef");
+                			String target = batchRegionElement.attribute("targetRef");
+        
+            				if(!postConditionPerElement.containsKey(source)){
+            					ArrayList<String> postCond = new ArrayList<String>();
+            					postCond.add(target);
+            					postConditionPerElement.put(source, postCond);
+            				}else{
+            					postConditionPerElement.get(source).add(target);
+            				}
+            				
+            				if(!preConditionPerElement.containsKey(target)){
+            					ArrayList<String> preCond = new ArrayList<String>();
+            					preCond.add(source);
+            					preConditionPerElement.put(target, preCond);
+            				}else{
+            					postConditionPerElement.get(target).add(source);
+            				}
+            			}
+            		}
+            		
+            		ArrayList<String> potentialEntries = new ArrayList<String>();
+            		ArrayList<String> potentialExits = new ArrayList<String>();
+            		for (Element batchRegionElement:parentElement.elements()){
+            			if (batchRegionElement.getTagName().equals("sequenceFlow")||batchRegionElement.getTagName().equals("extensionElements")){
+            	
+            			}else{
+            				if (batchRegionElement.getTagName().equals("exclusiveGateway")){
+            					addError("Cannot have a decision in a batch region", parentElement);
+            				}
+            				if (!preConditionPerElement.containsKey(batchRegionElement.attribute("id"))){
+            					
+            					if (batchRegionElement.getTagName().contains("ask")){
+            						potentialEntries.add(batchRegionElement.attribute("id"));
+            					}else{
+            						potentialEntries.add(postConditionPerElement.get(batchRegionElement.attribute("id")).get(0));  
+            					}
+            				}
+            				if (!postConditionPerElement.containsKey(batchRegionElement.attribute("id"))){
+            					if (batchRegionElement.getTagName().contains("ask")){
+            						potentialExits.add(batchRegionElement.attribute("id"));
+            					}else{
+            						potentialExits.add(preConditionPerElement.get(batchRegionElement.attribute("id")).get(0));  
+            					}
+            					
+            				
+            				}
+            			}
+            		}
+            			
+        			if (potentialEntries.size()!=1){
+    					addError("Batch region needs exactely one entry activity", parentElement);
+    				}else{
+    					entryActivity = potentialEntries.get(0);
+    				}
+        			
+        			if (potentialExits.size()!=1){
+    					addError("Batch region needs exactely one exit activity", parentElement);
+    				}else{
+    					exitActivity = potentialExits.get(0);
+    				}          		     		
             		
             		BatchRegion batchRegion = new BatchRegion(groupingCharacteristic, maxCapacity, threshold, timeOut, entryActivity, exitActivity);
             		

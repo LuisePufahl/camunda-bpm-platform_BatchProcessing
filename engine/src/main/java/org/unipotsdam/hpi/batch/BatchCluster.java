@@ -22,6 +22,7 @@ public class BatchCluster {
 	private String currentState;
 	private BatchRegion batchRegion;
 	private Boolean userTaskExists;
+	private ActivityExecution batchExecution;
 	
 	public String INIT = "init";
 	public String READY = "ready";
@@ -29,11 +30,12 @@ public class BatchCluster {
 	public String TERMINATED = "terminated";
 	public String MAXLOADED = "maxloaded";
 	
-	public BatchCluster(BatchRegion batchRegion){
+	public BatchCluster(ActivityExecution batchExecution, BatchRegion batchRegion){
 		this.currentState = this.INIT;
 		System.out.println("BatchCluster "+this+" in state \""+ currentState+ "\"");
 		this.batchRegion = batchRegion;
 		this.userTaskExists = false;
+		this.batchExecution =  batchExecution;
 	}
 	
 	
@@ -41,6 +43,7 @@ public class BatchCluster {
 	public void addInstance(ActivityExecution instance) {
 		instances.add(instance);
 		if (instances.size()>= batchRegion.getMaxBatchSize()){
+			// now the batch region will not assign any new instances to this cluster
 			currentState = this.MAXLOADED;
 			System.out.println("BatchCluster "+this+" in state \""+ currentState+ "\"");
 		}else{
@@ -49,31 +52,32 @@ public class BatchCluster {
 		
 		if (currentState == this.READY || currentState == this.MAXLOADED){
 			
+			
+			
 			if (userTaskExists){
-				List<TaskEntity> tasks = Context.getCommandContext().getTaskManager().findTasksByExecutionId(instances.get(0).getId());
+				/*List<TaskEntity> tasks = Context.getCommandContext().getTaskManager().findTasksByExecutionId(instances.get(0).getId());
 				//TODO improve, that it is the batch task
 				TaskEntity task = tasks.get(0);
 				
 				
 				
-				((UserTaskBatchBehavior) instance.getActivity().getActivityBehavior()).addNewInstances((ActivityExecution) task, instance);
+				((UserTaskBatchBehavior) instance.getActivity().getActivityBehavior()).addNewInstances(batchExecution, instance);*/
+				((UserTaskBatchBehavior) instance.getActivity().getActivityBehavior()).addNewInstances(batchExecution, instance);
 								
 			}else{
-				executeCluster(instances.get(0));
+				executeCluster();
 				//TODO usually the task is now in state running, if it is not a userBatchTask
 			}
 			
-			
-			
-			
 		}
+			
 		
 	}
 
-	private void executeCluster(ActivityExecution exInst) {
-		((BatchBehavior)exInst.getActivity().getActivityBehavior()).composite(instances);
+	private void executeCluster() {
+		((BatchBehavior)batchExecution.getActivity().getActivityBehavior()).composite(batchExecution, instances);
 		this.userTaskExists = true;
-		((BatchBehavior)exInst.getActivity().getActivityBehavior()).executeBA(exInst);
+		((BatchBehavior)batchExecution.getActivity().getActivityBehavior()).executeBA(batchExecution);
 		
 	}
 
@@ -113,7 +117,7 @@ public class BatchCluster {
 	}
 	
 	public void activate(){
-		executeCluster(instances.get(0));
+		executeCluster();
 		currentState = this.READY;
 		System.out.println("BatchCluster "+this+" in state \""+ currentState+ "\"");
 	}
@@ -125,7 +129,8 @@ public class BatchCluster {
 		if(nextActInst.size()==instances.size()){
 			instances.clear();
 			instances.addAll(nextActInst);
-			executeCluster(nextActInst.get(0));
+			batchExecution = instances.get(0);
+			executeCluster();
 			nextActInst.clear();
 		}
 	}

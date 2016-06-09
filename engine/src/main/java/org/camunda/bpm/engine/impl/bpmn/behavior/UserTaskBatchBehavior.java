@@ -53,14 +53,14 @@ BatchBehavior {
 						.setVariable(varId,variables.get(variableId));
 				}
 				
-				if (variableId.contains(instance.getId().replace("-", "_"))){
+				/*if (variableId.contains(instance.getId().replace("-", "_"))){
 					String varId = variableId.replace(instance.getId().replace("-", "_"), "");
 							//copy.setId(fieldHandler.getId() + executionId.replace("-", "_"));
 					Context.getCommandContext()
 						.getExecutionManager()
 						.findExecutionById(instance.getId())
 						.setVariable(varId,variables.get(variableId));
-				}
+				}*/
 			}
 			
 			if(instance.getId().equals(execution.getId())){
@@ -77,10 +77,11 @@ BatchBehavior {
 	    super.signal(execution, signalName, signalData);
 	}
 
-	public void buildJSON(ActivityExecution execution, List<ActivityExecution> instances){
+
+	private void buildJSON(ActivityExecution batchExecution, List<ActivityExecution> instances){
 	
 	//get names of ProcessVariables
-	Set<String> names = execution.getVariableNames();
+	Set<String> names = batchExecution.getVariableNames();
 	// open JSON
 	String JSONvariable = "{";
 	// loop over all processInstances
@@ -92,7 +93,7 @@ BatchBehavior {
 		int j = 1;
 		for (String name : names){	
 			JSONvariable = JSONvariable + "\"" + name + "\" : ";
-			Object value = execution.getVariable(name);
+			Object value = processInstance.getVariable(name);
 			JSONvariable = JSONvariable + "\""+ value.toString()+"\"";
 			// place "," between attribute-key-value-pairs except for last pair
 			if (j < names.size()){
@@ -110,13 +111,13 @@ BatchBehavior {
 	}
 	// close JSON
 	JSONvariable = JSONvariable + "}";
-	Context.getCommandContext().getExecutionManager().findExecutionById(execution.getId()).setVariable("caseListString", JSONvariable);
+	Context.getCommandContext().getExecutionManager().findExecutionById(batchExecution.getId()).setVariable("batchCluster", JSONvariable);
 	}
 	
 	@Override
-	public void composite(List<ActivityExecution> instances) {
+	public void composite(ActivityExecution batchExecution, List<ActivityExecution> instances) {
 		
-		ActivityExecution batchExecution = instances.get(0);
+		//ActivityExecution batchExecution = instances.get(0);
 			
 		buildJSON(batchExecution,instances);
 		
@@ -127,11 +128,11 @@ BatchBehavior {
 	
 	
 	
-	public void addNewInstances(ActivityExecution execution, ActivityExecution instance){
+	public void addNewInstances(ActivityExecution batchExecution, ActivityExecution instance){
 
-		String JSONString = (String) execution.getVariable("caseListString");
+		String JSONString = (String) batchExecution.getVariable("batchCluster");
 		String instanceID = instance.getProcessInstanceId();
-		Set<String> names = instance.getVariableNames();
+		Set<String> names = batchExecution.getVariableNames();
 		JSONString = JSONString + ",{\"" + instanceID + "\" : {";
 		int i = 1;
 		for (String name : names){	
@@ -145,7 +146,7 @@ BatchBehavior {
 			i++;
 		}
 		JSONString = JSONString + "}}";
-		Context.getCommandContext().getExecutionManager().findExecutionById(execution.getId()).setVariable("caseListString", JSONString);
+		Context.getCommandContext().getExecutionManager().findExecutionById(batchExecution.getId()).setVariable("batchCluster", JSONString);
 				
 	}
 	
@@ -154,9 +155,9 @@ BatchBehavior {
 	public void executeBA(ActivityExecution batchExecution) {
 		try {
 			super.execute(batchExecution);
-			Context.getCommandContext().getDbSqlSession().flush();
+			//Context.getCommandContext().getDbSqlSession().flush();
 			//set TaskDecorator back to the original one
-			super.taskDecorator = this.taskDecorator;
+			//super.taskDecorator = this.taskDecorator;
 		} catch (Exception e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
