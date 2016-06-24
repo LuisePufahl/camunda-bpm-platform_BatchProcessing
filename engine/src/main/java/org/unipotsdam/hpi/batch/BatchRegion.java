@@ -229,8 +229,8 @@ public class BatchRegion {
 			return timeout;
 		}
 	
-		public String getGroupingChar(){			
-			return(groupingChar.toString());
+		public List<String> getGroupingChar(){			
+			return groupingChar;
 		}
 	
 }

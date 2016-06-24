@@ -19,6 +19,7 @@ import java.util.List;
 import java.util.Map;
 
 import org.camunda.bpm.engine.ProcessEngineConfiguration;
+import org.camunda.bpm.engine.TaskService;
 import org.camunda.bpm.engine.impl.cfg.ProcessEngineConfigurationImpl;
 import org.camunda.bpm.engine.impl.test.PluggableProcessEngineTestCase;
 import org.camunda.bpm.engine.impl.util.ClockUtil;
@@ -66,13 +67,13 @@ public class BatchTest extends PluggableProcessEngineTestCase {
     
     // first batch task
     Task batchTask = taskService.createTaskQuery().singleResult();
-  	Object test= formService.getRenderedTaskForm(batchTask.getId());
-  	Object test2= formService.getTaskFormVariables(batchTask.getId());
+    Object test= formService.getRenderedTaskForm(batchTask.getId());
   	taskService.complete(batchTask.getId());
   	
+  	formProperties.put("transportbatch", "DHL");
   	//second batch task
   	batchTask = taskService.createTaskQuery().singleResult();
-  	test= formService.getRenderedTaskForm(batchTask.getId());
+  	
   	taskService.complete(batchTask.getId());
   	
   	//test Timer
@@ -88,6 +89,14 @@ public class BatchTest extends PluggableProcessEngineTestCase {
     // After setting the clock to time '50minutes and 5 seconds', the second timer should fire
     ClockUtil.setCurrentTime(new Date(startTime.getTime() + ((1 * 60 * 1000) + 5000)));
     waitForJobExecutorToProcessAllJobs(5000L);
+    
+    // first batch task
+    batchTask = taskService.createTaskQuery().singleResult();
+  	taskService.complete(batchTask.getId());
+  	
+  	formProperties.put("transportbatch", "DHL");
+  	//second batch task
+  	batchTask = taskService.createTaskQuery().singleResult();
     
   	
   }

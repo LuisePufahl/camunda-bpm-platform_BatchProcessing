@@ -1,19 +1,11 @@
 <form role="form" name="form">
   <script cam-script type="text/form-script">
     camForm.on('form-loaded', function() {
-	  camForm.variableManager.fetchVariable('custName');
-	  camForm.variableManager.fetchVariable('custAdress');
-	  camForm.variableManager.fetchVariable('orderItems');
 	  camForm.variableManager.fetchVariable('caseList');
-	  camForm.variableManager.fetchVariable('caseListString');
+	  camForm.variableManager.fetchVariable('batchCluster');
     });
-    camForm.on('variables-restored', function() {
-      $scope.custName = camForm.variableManager.variableValue('custName');
-      $scope.custAdress = camForm.variableManager.variableValue('custAdress');
-      $scope.orderItems = camForm.variableManager.variableValue('orderItems');
-      $scope.caseListString = camForm.variableManager.variableValue('caseListString');
-	  $scope.caseList = JSON.parse(camForm.variableManager.variableValue('caseListString'));       
-      console.log("setting variables to scope");  
+    camForm.on('variables-applied', function() {
+	  $scope.caseList = JSON.parse(camForm.variableManager.variableValue('batchCluster'));  //JSON variable which is a string variable has to be parsed first      
     });
 
  
@@ -30,7 +22,7 @@
    	  <td>Order Item</td>
     </tr>
     
-    <tr ng-repeat="(key, value) in caseList track by $index">
+    <tr ng-repeat="(key, value) in caseList track by $index">	
       <td>{{key}}</td>
       <td>{{value.custName}}</td>
       <td>{{value.custAdress}}</td>
@@ -46,7 +38,7 @@
         <input class="form-control"
                required
                type="text"
-               cam-variable-name="transport"
+               cam-variable-name="transportbatch"
                cam-variable-type="String"
                placeholder="DHL"
                ng-minlength="2"

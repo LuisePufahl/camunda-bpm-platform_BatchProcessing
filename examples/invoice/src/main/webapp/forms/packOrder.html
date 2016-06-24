@@ -4,10 +4,8 @@
 	  camForm.variableManager.fetchVariable('caseList');
 	  camForm.variableManager.fetchVariable('batchCluster');
     });
-    camForm.on('variables-restored', function() {
-      $scope.caseListString = camForm.variableManager.variableValue('batchCluster');
-	  $scope.caseList = JSON.parse(camForm.variableManager.variableValue('batchCluster'));       
-      console.log("setting variables to scope");  
+    camForm.on('variables-applied', function() {
+	  $scope.caseList = JSON.parse(camForm.variableManager.variableValue('batchCluster'));        
     });
 
  

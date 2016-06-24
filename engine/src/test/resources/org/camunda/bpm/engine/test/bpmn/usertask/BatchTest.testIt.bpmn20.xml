@@ -70,24 +70,6 @@
       <sequenceFlow id="sid-A143A22A-DBFC-4F85-A3E4-0F502E0CA456" name="" sourceRef="theSubStart" targetRef="userTask2"/>	
       
       <userTask id="userTask2" camunda:formKey="embedded:app:forms/taskform.html" name= "Namen validieren" >
-      	<extensionElements>
-		    <camunda:formData>
-		        <camunda:formField
-		            id="firstname" label="Firstname" type="string">
-		            <camunda:validation>
-		               <camunda:constraint name="maxlength" config="25" />
-		               <camunda:constraint name="required" />
-		            </camunda:validation>
-		        </camunda:formField>
-		        <camunda:formField
-		            id="lastname" label="Lastname" type="string">
-		            <camunda:validation>
-		               <camunda:constraint name="maxlength" config="25" />
-		               <camunda:constraint name="required" />
-		            </camunda:validation>
-		        </camunda:formField>
-		    </camunda:formData>
-		  </extensionElements>
          <humanPerformer id="sid-6fb5b033-ee58-438c-abf4-e4e2fdd543e7">
             <resourceAssignmentExpression id="sid-d2837c98-373d-4700-b533-7662e95fc69d">
                <formalExpression id="sid-d0113065-5fa3-4fb1-b361-2423defefd9d">demo</formalExpression>
@@ -98,31 +80,6 @@
       <sequenceFlow id="sid-7CD58A88-0C17-4B28-BF0A-1A0695C77015" name="" sourceRef="userTask2" targetRef="userTask3"/>
       
       <userTask id="userTask3" camunda:formKey="embedded:app:forms/taskform.html" name= "Pakete versenden" >
-      	<extensionElements>
-		    <camunda:formData>
-		        <camunda:formField
-		            id="firstname" label="Firstname" type="string">
-		            <camunda:validation>
-		               <camunda:constraint name="maxlength" config="25" />
-		               <camunda:constraint name="required" />
-		            </camunda:validation>
-		        </camunda:formField>
-		        <camunda:formField
-		            id="lastname" label="Lastname" type="string">
-		            <camunda:validation>
-		               <camunda:constraint name="maxlength" config="25" />
-		               <camunda:constraint name="required" />
-		            </camunda:validation>
-		        </camunda:formField>
-		        <camunda:formField
-		            id="provider" label="Provider" type="string" batch="true">
-		            <camunda:validation>
-		               <camunda:constraint name="maxlength" config="25" />
-		               <camunda:constraint name="required" />
-		            </camunda:validation>
-		        </camunda:formField>
-		    </camunda:formData>
-		  </extensionElements>
          <humanPerformer id="sid-6fb5b033-ee58-438c-abf4-e4e2fdd543e8">
             <resourceAssignmentExpression id="sid-d2837c98-373d-4700-b533-7662e95fc698">
                <formalExpression id="sid-d0113065-5fa3-4fb1-b361-2423defefd98">demo</formalExpression>
