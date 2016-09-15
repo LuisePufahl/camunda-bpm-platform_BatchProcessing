@@ -1199,44 +1199,73 @@ public class BpmnParse extends Parse {
    *          The {@link ScopeImpl} to which the activities must be added.
    */
   public void parseActivities(List<Element> activityElements, Element parentElement, ScopeImpl scopeElement) {
-    for (Element activityElement : activityElements) {
+	  
+	  
+	  for (Element activityElement : activityElements) {
     	//TODO: Extension for batch region
     	if (activityElement.getTagName().equals("extensionElements")){
     		
-    		List<Element> extensionElements = activityElement.elements();
+    		Element extensionElement = activityElement.elementNS(CAMUNDA_BPMN_EXTENSIONS_NS, "properties");
+    		
+/*   Example of the batch region extension 	      
+ * 			<bpmn2:extensionElements>
+    	        <camunda:properties>
+    	          <camunda:property name="activationRule" value="ThresholdRule" />
+    	          <camunda:property name="batchRegion" value="batch123" />
+    	          <camunda:property name="groupingChar" value="custName;&#10;custAdress&#10;" />
+    	          <camunda:property name="threshold" value="2" />
+    	          <camunda:property name="timeout" value="60" />
+    	          <camunda:property name="maxCapacity" value="3" />
+    	        </camunda:properties>
+    	      </bpmn2:extensionElements>*/
     		
     		
-    		for (Element extensionElement:extensionElements){
-    			if(extensionElement.getTagName().equals("batchRegion")){
-    				List<Element> batchRegionConfig = activityElement.elements().get(0).elements();
-            		int maxCapacity = 0;
+    		List<Element> batchRegionConfig= extensionElement.elementsNS(BpmnParse.CAMUNDA_BPMN_EXTENSIONS_NS, "property");
+    		
+ //   				List<Element> batchRegionConfig = extensionElement.elements();
+            		String batchId = new String();
+    				int maxCapacity = 0;
             		int threshold = 0;
             		String timeOut = new String();
             		List <String> groupingCharacteristic = new ArrayList <String>();
             		String entryActivity = null;
             		String exitActivity = null;
             		
+            		        		
+            		
             		for (Element configItem : batchRegionConfig) {
-            			if(configItem.getTagName().equals("groupingCharacteristic")){
-            				List<Element> processVariables = configItem.elements();
-            				for (Element processVariable:processVariables){
-            					groupingCharacteristic.add(processVariable.getText());          					
+            			
+            			String name = configItem.attribute("name").toString();
+            			String value = configItem.attribute("value").toString();
+            			
+            			if(name.equals("groupingChar")){
+            				String[] processVariables = value.split(";"); 
+            						
+            				for (String processVariable:processVariables){
+            					processVariable = processVariable.replace("\n","");
+            					groupingCharacteristic.add(processVariable);          					
             				}
             				
-            			}else if(configItem.getTagName().equals("maxCapacity")){
-            				maxCapacity = Integer.parseInt(configItem.getText());
+            			}else if(name.equals("maxCapacity")){
+            					maxCapacity = Integer.parseInt(value);
             				
-            			}else if(configItem.getTagName().equals("thresholdRule")){
-            				threshold = Integer.parseInt(configItem.attribute("num"));
-            				timeOut= configItem.attribute("timeout");
-            			}
+            			}else 
+            				if(name.equals("threshold")){
+            					threshold = Integer.parseInt(value);
+            			}else 
+            				if(name.equals("timeout")){
+            					timeOut= "PT"+value+"M"; //Achtung muss das nicht PT irgendetwas sein
+            			}else
+            				if(name.equals("batchRegion")){
+            					batchId = value; 
+            				}
             		}
             		
             		
             		//identify the elements of the batch region
             		
             		for (Element batchRegionElement:parentElement.elements()){
-            			elementsOfBatchRegions.put(batchRegionElement.attribute("id"), extensionElement.attribute("id"));
+            			elementsOfBatchRegions.put(batchRegionElement.attribute("id"), batchId);
             		}
             		
             		
@@ -1272,7 +1301,11 @@ public class BpmnParse extends Parse {
             		ArrayList<String> potentialEntries = new ArrayList<String>();
             		ArrayList<String> potentialExits = new ArrayList<String>();
             		for (Element batchRegionElement:parentElement.elements()){
-            			if (batchRegionElement.getTagName().equals("sequenceFlow")||batchRegionElement.getTagName().equals("extensionElements")){
+            			if (batchRegionElement.getTagName().equals("sequenceFlow")
+            			    ||batchRegionElement.getTagName().equals("extensionElements")
+            			    ||batchRegionElement.getTagName().equals("incoming")
+            			    ||batchRegionElement.getTagName().equals("outgoing")){
+            				
             	
             			}else{
             				if (batchRegionElement.getTagName().equals("exclusiveGateway")){
@@ -1312,17 +1345,15 @@ public class BpmnParse extends Parse {
             		
             		BatchRegion batchRegion = new BatchRegion(groupingCharacteristic, maxCapacity, threshold, timeOut, entryActivity, exitActivity);
             		
-            		batchRegions.put(extensionElement.attribute("id"), batchRegion);
-    			}	
+            		batchRegions.put(batchId, batchRegion);	
         		
-    		}
     		   		
     		
     	} else {
     		parseActivity(activityElement, parentElement, scopeElement);
     	}
-    }
-  }
+	  }
+}
 
   protected ActivityImpl parseActivity(Element activityElement, Element parentElement, ScopeImpl scopeElement) {
     ActivityImpl activity = null;

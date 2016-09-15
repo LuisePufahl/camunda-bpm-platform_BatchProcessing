@@ -1,0 +1,85 @@
+<h3>Embedded Forms Quickstart</h3>
+<form role="form"
+      name="variablesForm">
+      
+
+<script cam-script type="text/form-script">
+
+	var caseList = $scope.caseList = {};
+
+    camForm.on('form-loaded', function() {
+
+    // declare a 'json' variable 'caseList' 
+    	camForm.variableManager.createVariable({
+        	name: 'caseList',
+        	type: 'json',
+        	value: caseList
+      	});
+    });
+
+</script>
+
+<script cam-script type="text/form-script">
+
+	var caseListString = $scope.caseListString = {};
+
+    camForm.on('form-loaded', function() {
+
+    // declare a 'json' variable 'caseListString' 
+    	camForm.variableManager.createVariable({
+        	name: 'caseListString',
+        	type: 'String',
+        	value: 'caseListString'
+      	});
+    });
+
+</script>
+
+
+    <h2>Blood Test Order</h2>
+
+
+    <!-- custName -->
+    <div class="form-group">
+      <label for="inputcustName">Patient Name</label>
+      <div class="controls">
+        <input class="form-control"
+               required
+               type="text"
+               cam-variable-name="patientName"
+               cam-variable-type="String"
+               placeholder="John"
+               ng-minlength="2"
+               ng-maxlength="20" />
+      </div>
+    </div>
+
+    <!-- custAdress -->
+    <div class="form-group">
+      <label for="inputcustAdress">Patient Id</label>
+      <div class="controls">
+        <input class="form-control"
+               required
+               type="text"
+               cam-variable-name="patientId"
+               cam-variable-type="String"
+               placeholder="GH1234uui"
+               ng-minlength="2"
+               ng-maxlength="20" />
+               
+      </div>
+    </div>
+
+    <!-- orderItem -->
+    <div class="form-group">
+      <label for="inputorderItems">Test Type</label>
+      <div class="controls">
+        <select class="form-control"
+               cam-variable-name="testType"
+               cam-variable-type="String">
+               <option>Small haemogram</option>
+			   <option>Large haemogram</option> 
+		</select>
+      </div>
+    </div>
+</form>

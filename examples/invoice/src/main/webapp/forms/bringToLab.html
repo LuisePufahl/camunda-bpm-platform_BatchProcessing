@@ -1,0 +1,35 @@
+<form role="form" name="form">
+  <script cam-script type="text/form-script">
+    camForm.on('form-loaded', function() {
+	  camForm.variableManager.fetchVariable('caseList');
+	  camForm.variableManager.fetchVariable('batchCluster');
+    });
+    camForm.on('variables-applied', function() {
+	  $scope.caseList = JSON.parse(camForm.variableManager.variableValue('batchCluster'));        
+    });
+
+ 
+  </script>
+
+  <h2>Overview on open Blood Test Orders</h2>
+
+  <table>
+
+    <tr>
+      <td>ID:</td>   
+   	  <td>Patient Name</td>
+   	  <td>Patient Id</td>
+   	  <td>Blood Test Type</td>
+	  <td>Sample Taken?</td>
+    </tr>
+    
+    <tr ng-repeat="(key, value) in caseList track by $index">
+      <td>{{key}}</td>
+      <td>{{value.patientName}}</td>
+      <td>{{value.patientId}}</td>
+      <td>{{value.testType}}</td>
+	  <td>{{value.bloodSample}}</td>
+    </tr>
+  </table>
+  
+ <h3> Please bring them with the samples to the laboratory. </h3>
